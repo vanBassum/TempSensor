@@ -11,41 +11,96 @@
 #include "freertos/task.h"
 #include "esp_chip_info.h"
 #include "esp_flash.h"
+#include "esp_log.h"
+#include "servicelocator.h"
+#include "esp_drivers.h"
 
-void app_main(void)
+#define LV_HOR_RES_MAX 320
+#define LV_VER_RES_MAX 480
+#define SPI_HOST_MAX 3
+#define DISP_SPI_MISO -1
+#define DISP_SPI_MOSI 13
+#define DISP_SPI_CLK 14
+#define DISP_PIN_BCKL GPIO_NUM_23
+#define DISP_SPI_CS 15
+#define DISP_SPI_IO2 -1
+#define DISP_SPI_IO3 -1
+#define DISP_BUF_SIZE  (LV_HOR_RES_MAX * 40)
+#define SPI_BUS_MAX_TRANSFER_SZ (DISP_BUF_SIZE * 2)
+#define SPI_TFT_CLOCK_SPEED_HZ  (40*1000*1000)
+#define SPI_TFT_SPI_MODE    (0)
+#define DISP_SPI_INPUT_DELAY_NS (0)
+#define SPI_TRANSACTION_POOL_SIZE 50	/* maximum number of DMA transactions simultaneously in-flight */
+/* DMA Transactions to reserve before queueing additional DMA transactions. A 1/10th seems to be a good balance. Too many (or all) and it will increase latency. */
+#define SPI_TRANSACTION_POOL_RESERVE_PERCENTAGE 10
+#define SPI_TRANSACTION_POOL_RESERVE (SPI_TRANSACTION_POOL_SIZE / SPI_TRANSACTION_POOL_RESERVE_PERCENTAGE)	
+
+void ConfigSPIBus(SPIBus& bus)
 {
-    printf("Hello world!\n");
+    bus.host = SPI2_HOST;
+    bus.dmaChannel = 1;
+    bus.config = {
+        .mosi_io_num = DISP_SPI_MOSI,
+        .miso_io_num = DISP_SPI_MISO,
+        .sclk_io_num = DISP_SPI_CLK,
+        .quadwp_io_num = DISP_SPI_IO2,
+        .quadhd_io_num = DISP_SPI_IO3,
+        .max_transfer_sz = SPI_BUS_MAX_TRANSFER_SZ
+    };
+}
 
-    /* Print chip information */
-    esp_chip_info_t chip_info;
-    uint32_t flash_size;
-    esp_chip_info(&chip_info);
-    printf("This is %s chip with %d CPU core(s), %s%s%s%s, ",
-           CONFIG_IDF_TARGET,
-           chip_info.cores,
-           (chip_info.features & CHIP_FEATURE_WIFI_BGN) ? "WiFi/" : "",
-           (chip_info.features & CHIP_FEATURE_BT) ? "BT" : "",
-           (chip_info.features & CHIP_FEATURE_BLE) ? "BLE" : "",
-           (chip_info.features & CHIP_FEATURE_IEEE802154) ? ", 802.15.4 (Zigbee/Thread)" : "");
+void ConfigSPIDevice_ST7796S(SPIDevice& device)
+{
+    device.devConfig = {0};
+    device.devConfig.clock_speed_hz = SPI_TFT_CLOCK_SPEED_HZ   ; 
+    device.devConfig.mode = SPI_TFT_SPI_MODE;
+    device.devConfig.spics_io_num=DISP_SPI_CS            ;
+    device.devConfig.input_delay_ns=DISP_SPI_INPUT_DELAY_NS;
+    device.devConfig.queue_size=SPI_TRANSACTION_POOL_SIZE;
+    device.devConfig.pre_cb=NULL;
+    device.devConfig.post_cb=NULL;
+ 
+}
 
-    unsigned major_rev = chip_info.revision / 100;
-    unsigned minor_rev = chip_info.revision % 100;
-    printf("silicon revision v%d.%d, ", major_rev, minor_rev);
-    if(esp_flash_get_size(NULL, &flash_size) != ESP_OK) {
-        printf("Get flash size failed");
-        return;
-    }
+void Config_ST7796S(ST7796S& device)
+{
+    device.dc=GPIO_NUM_21;
+    device.rst=GPIO_NUM_22;
+    device.blck = DISP_PIN_BCKL;
+}
 
-    printf("%" PRIu32 "MB %s flash\n", flash_size / (uint32_t)(1024 * 1024),
-           (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
+uint16_t colors[10*10];
 
-    printf("Minimum free heap size: %" PRIu32 " bytes\n", esp_get_minimum_free_heap_size());
+extern "C" void app_main(void)
+{
+    ESP_LOGI("MAIN", "Started");
 
-    for (int i = 10; i >= 0; i--) {
-        printf("Restarting in %d seconds...\n", i);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
-    printf("Restarting now.\n");
-    fflush(stdout);
-    esp_restart();
+    Builder builder;
+    builder.Services.addService<SPIBus>(
+        ServiceTags::SPIBUS, 
+        ConfigSPIBus);
+
+    builder.Services.addService<SPIDevice>(
+        ServiceTags::SPIDevice_ST7796S, 
+        builder.Services.getService<SPIBus>(ServiceTags::SPIBUS), 
+        ConfigSPIDevice_ST7796S);
+
+    builder.Services.addService<ST7796S>(
+        ServiceTags::DRIVER_ST7796S, 
+        builder.Services.getService<SPIDevice>(ServiceTags::SPIDevice_ST7796S), 
+        Config_ST7796S);
+
+    auto driver = builder.Services.getService<ST7796S>(ServiceTags::DRIVER_ST7796S);
+
+    driver->st7796s_init();
+//driver->DrawPixel(20, 20, 0xFFFF);
+    
+    driver->SetWindow(0, 0, 10, 10);
+    driver->WriteWindow(colors, 10*10);
+
+    //driver->DrawPixel(10, 10, 0x0000);
+    //driver->DrawPixel(20, 20, 0xFFFF);
+
+    while(1)
+        vTaskDelay(pdMS_TO_TICKS(1000));
 }
