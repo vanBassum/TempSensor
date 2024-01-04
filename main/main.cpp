@@ -17,6 +17,7 @@
 #include "deviceconfig.h"
 #include <math.h>
 
+#define LV_THEME_DEFAULT_DARK 1
 
 
 Builder builder;
@@ -28,12 +29,12 @@ extern "C" void app_main(void)
 
     
     builder.Services.addService<SPIBus>(
-        ServiceTags::SPIBUS, 
+        //ServiceTags::SPIBUS, 
         ConfigSPIBus);
 
     builder.Services.addService<SPIDevice>(
         ServiceTags::SPIDevice_ST7796S, 
-        builder.Services.getService<SPIBus>(ServiceTags::SPIBUS), 
+        builder.Services.getService<SPIBus>(),//(ServiceTags::SPIBUS), 
         ConfigSPIDevice_ST7796S);
 
     builder.Services.addService<ST7796S>(
@@ -46,11 +47,11 @@ extern "C" void app_main(void)
         builder.Services.getService<ST7796S>(ServiceTags::DRIVER_ST7796S), 
         Config_ST47796SAdapter);
 
-        auto driver = builder.Services.getService<ST47796SAdapter>(ServiceTags::ADAPTER_ST7796S);
-        ESP_LVGL::Display* disp = driver.get();
-        ESP_LVGL::Screen& screen = disp->GetScreen();
-        ESP_LVGL::Button button(screen);
-        button.SetSize(200, 50);
+    auto driver = builder.Services.getService<ST47796SAdapter>(ServiceTags::ADAPTER_ST7796S);
+    ESP_LVGL::Display* disp = driver.get();
+    ESP_LVGL::Screen& screen = disp->GetScreen();
+    ESP_LVGL::Button button(screen);
+    button.SetSize(200, 50);
 
 
     while(1)
