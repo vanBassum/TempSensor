@@ -15,7 +15,7 @@ class ST47796SAdapter : public ESP_LVGL::Display
 	void Flush_cb(struct _lv_display_t * disp, const lv_area_t * area, uint8_t * px_map)
 	{
         driver->SetWindow(area->x1, area->y1, area->x2, area->y2);
-        size_t size = (area->x2 - area->x1) * (area->y2 - area->y1);
+        size_t size = (area->x2 - area->x1 + 1) * (area->y2 - area->y1 + 1);
         driver->WriteWindow((uint16_t*)px_map, size);
 	    lv_display_flush_ready(disp);
 	}
@@ -38,7 +38,7 @@ public:
         driver->st7796s_init();
 
         //One buffer for partial rendering
-        bufferSize = width * height / 10;
+        bufferSize = width * height / 20;
         disp_buf = (uint8_t*)malloc(bufferSize);
         if (disp_buf == NULL)
             return;
