@@ -30,7 +30,7 @@ public:
     // Add service without interface using a custom tag
     template <typename Concrete, typename... Args>
     void addService(const char* tag, Args&&... args) {
-
+        ESP_LOGI(TAG, "Adding service '%s'", tag);
         if (services.find(tag) != services.end()) {
             ESP_LOGE(TAG, "Error: Service with tag '%s' already exists in ServiceFactory", tag);
             return;
@@ -56,7 +56,7 @@ public:
     // Add service with interface and custom tag
     template <typename Interface, typename Concrete, typename... Args>
     void addService(const char* tag, Args&&... args) {
-
+        ESP_LOGI(TAG, "Adding service '%s'", tag);
         if (services.find(tag) != services.end()) {
             ESP_LOGE(TAG, "Error: Service with tag '%s' already exists in ServiceFactory", tag);
             return;
