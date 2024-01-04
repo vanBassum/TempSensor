@@ -22,15 +22,6 @@
 
 Builder builder;
 
-
-void DrawStuff(std::shared_ptr<ESP_LVGL::Display> display)
-{
-    assert(display);
-    ESP_LVGL::Screen& screen = display->GetScreen();
-    ESP_LVGL::Button button(screen);
-    button.SetSize(200, 50);
-}
-
 extern "C" void app_main(void)
 {
     ESP_LOGI("MAIN", "Started");
@@ -45,29 +36,13 @@ extern "C" void app_main(void)
     ConfigST7796S(st7796s);
 
     auto display = builder.Services.addService<ESP_LVGL::Display, ST47796SAdapter>(st7796s);
-    DrawStuff(display);
+    
+    
+    assert(display);
+    ESP_LVGL::Screen& screen = display->GetScreen();
+    ESP_LVGL::Button button(screen);
+    button.SetSize(200, 50);
 
-
-//    builder.Services.addService<SPIDevice>(
-//        ServiceTags::SPIDevice_ST7796S, 
-//        builder.Services.getService<SPIBus>(),//(ServiceTags::SPIBUS), 
-//        ConfigSPIDevice_ST7796S);
-//
-//    builder.Services.addService<ST7796S>(
-//        ServiceTags::DRIVER_ST7796S, 
-//        builder.Services.getService<SPIDevice>(ServiceTags::SPIDevice_ST7796S), 
-//        Config_ST7796S);
-//
-//    builder.Services.addService<ST47796SAdapter>(
-//        ServiceTags::ADAPTER_ST7796S, 
-//        builder.Services.getService<ST7796S>(ServiceTags::DRIVER_ST7796S), 
-//        Config_ST47796SAdapter);
-//
-//    auto driver = builder.Services.getService<ST47796SAdapter>(ServiceTags::ADAPTER_ST7796S);
-//    ESP_LVGL::Display* disp = driver.get();
-//    ESP_LVGL::Screen& screen = disp->GetScreen();
-//    ESP_LVGL::Button button(screen);
-//    button.SetSize(200, 50);
 
 
     while(1)
