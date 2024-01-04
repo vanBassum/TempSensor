@@ -114,14 +114,29 @@ extern "C" void app_main(void)
         builder.Services.getService<SPIDevice>(ServiceTags::SPIDevice_ST7796S), 
         Config_ST7796S);
 
+    builder.Services.addService<ST47796SAdapter>(
+        ServiceTags::ADAPTER_ST7796S, 
+        builder.Services.getService<ST7796S>(ServiceTags::DRIVER_ST7796S), 
+        Config_ST47796SAdapter);
 
 
     // Some testing
-    auto driver = builder.Services.getService<ST7796S>(ServiceTags::DRIVER_ST7796S);
+    auto driver = builder.Services.getService<ST47796SAdapter>(ServiceTags::ADAPTER_ST7796S);
 
-    driver->st7796s_init();
+    ESP_LVGL::Display* disp = driver.get();
 
-    draw(driver);
+    ESP_LVGL::Screen& screen = disp->GetScreen();
+
+    ESP_LVGL::Button button(screen);
+    
+
+
+
+
+//
+    //driver->st7796s_init();
+//
+    //draw(driver);
 
 
     while(1)

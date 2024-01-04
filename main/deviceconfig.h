@@ -1,5 +1,6 @@
 #pragma once
 #include "esp_drivers.h"
+#include "ST7796SAdapter.h"
 
 void ConfigSPIBus(SPIBus& bus)
 {
@@ -36,4 +37,10 @@ void Config_ST7796S(ST7796S& device)
     device.hor_res  = 320;
     device.ver_res  = 480;
 }
+
+void Config_ST47796SAdapter(ST47796SAdapter& device)
+{
+
+}
+
 
