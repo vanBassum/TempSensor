@@ -27,15 +27,11 @@ class ST47796SAdapter : public ESP_LVGL::Display
 	}
 
 public:
-    ST47796SAdapter(std::shared_ptr<ST7796S> driver, std::function<void(ST47796SAdapter& adapter)> config)
+    ST47796SAdapter(std::shared_ptr<ST7796S> driver)
         : driver(driver)
     {
-        config(*this);
-
-        lv_coord_t width = driver->hor_res;
-		lv_coord_t height = driver->ver_res;
-
-        driver->st7796s_init();
+        lv_coord_t width = driver->getWidth();
+		lv_coord_t height = driver->getHeight();
 
         //One buffer for partial rendering
         bufferSize = width * height / 20;
