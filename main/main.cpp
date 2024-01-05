@@ -26,23 +26,18 @@ extern "C" void app_main(void)
 {
     ESP_LOGI("MAIN", "Started");
 
-    auto spiBus = builder.Services.addService<SPIBus>();
-    ConfigSPIBus(spiBus);
+    builder.Services.addService<SPIBus>().Config(ConfigSPIBus);
+    builder.Services.addService<SPIDevice>(builder.Services.getService<SPIBus>()).Config(ConfigSPIDevice);
+    builder.Services.addService<ST7796S>(builder.Services.getService<SPIDevice>()).Config(ConfigST7796S);
+    builder.Services.addService<ESP_LVGL::Display, ST47796SAdapter>(builder.Services.getService<ST7796S>());
 
-    auto spiDevice = builder.Services.addService<SPIDevice>(spiBus);
-    ConfigSPIDevice(spiDevice);
 
-    auto st7796s = builder.Services.addService<ST7796S>(spiDevice);
-    ConfigST7796S(st7796s);
+    auto display = builder.Services.getService<ESP_LVGL::Display>();
 
-    auto display = builder.Services.addService<ESP_LVGL::Display, ST47796SAdapter>(st7796s);
-    
-    
     assert(display);
     ESP_LVGL::Screen& screen = display->GetScreen();
     ESP_LVGL::Button button(screen);
     button.SetSize(200, 50);
-
 
 
     while(1)

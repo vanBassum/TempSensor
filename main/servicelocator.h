@@ -7,86 +7,69 @@
 #include "esp_log.h"
 #include "servicetags.h"
 
+
+
 class ServiceContext {
     constexpr static const char* TAG = "ServiceContext";
     std::unordered_map<std::string, std::shared_ptr<void>> services;
 
 public:
 
-    // Add service without interface using a custom tag
-    template <typename Concrete, typename... Args>
-    std::shared_ptr<Concrete> addService(const char* tag, Args&&... args) {
-        ESP_LOGI(TAG, "Adding service '%s'", tag);
-        if (services.find(tag) != services.end()) {
-            ESP_LOGE(TAG, "Error: Service with tag '%s' already exists in ServiceFactory", tag);
-            return nullptr;
+    template <typename Type>
+    class Configurator
+    {
+        std::shared_ptr<Type> ptr;
+    public:
+
+        Configurator(std::shared_ptr<Type> ptr) : ptr(ptr) {
+
         }
 
+        void Config(std::function<void(std::shared_ptr<Type>)> initializer) {
+            assert(initializer);
+            initializer(ptr);
+        }
+
+        //std::shared_ptr<Type> Get(){
+        //    return ptr;
+        //}
+
+    };
+
+    // Add service without interface using a custom tag
+    template <typename Concrete, typename... Args>
+    Configurator<Concrete> addService(const char* tag, Args&&... args) {
+        ESP_LOGI(TAG, "Adding service '%s'", tag);
+        assert(services.find(tag) == services.end() && "Error: Service tag already exists.");
         auto concreteInstance = std::make_shared<Concrete>(std::forward<Args>(args)...);
+        assert(concreteInstance);
         services[tag] = std::static_pointer_cast<void>(concreteInstance);
-        return concreteInstance;
+        return Configurator<Concrete>(concreteInstance);
     }
-
-
 
     // Add service with interface and custom tag
     template <typename Interface, typename Concrete, typename... Args>
-    std::shared_ptr<Concrete> addService(const char* tag, Args&&... args) {
-        ESP_LOGI(TAG, "Adding service '%s'", tag);
-        if (services.find(tag) != services.end()) {
-            ESP_LOGE(TAG, "Error: Service with tag '%s' already exists in ServiceFactory", tag);
-            return nullptr;
-        }
+    Configurator<Concrete> addService(const char* tag, Args&&... args) {
+        return addService<Concrete>(tag, std::forward<Args>(args)...);
 
-        auto concreteInstance = std::make_shared<Concrete>(std::forward<Args>(args)...);
-        services[tag] = std::static_pointer_cast<void>(concreteInstance);
-        return concreteInstance;
     }
 
 #ifdef CONFIG_COMPILER_CXX_RTTI
     // Add service without interface and without tag
     template <typename Concrete, typename... Args>
-    std::shared_ptr<Concrete>  addService(Args&&... args) {
+    Configurator<Concrete> addService(Args&&... args) {
         const std::string tag = typeid(Concrete).name();
-
-        if (services.find(tag) != services.end()) {
-            ESP_LOGE(TAG, "Error: Service of type '%s' already exists in ServiceFactory", tag.c_str());
-            return nullptr;
-        }
-
-        auto concreteInstance = std::make_shared<Concrete>(std::forward<Args>(args)...);
-        services[tag] = std::static_pointer_cast<void>(concreteInstance);
-        return concreteInstance;
+        return addService<Concrete>(tag.c_str(), std::forward<Args>(args)...);
     }
 
     // Add service with interface without tag
     template <typename Interface, typename Concrete, typename... Args>
-    std::shared_ptr<Concrete>  addService(Args&&... args) {
+    Configurator<Concrete> addService(Args&&... args) {
         const std::string tag = typeid(Interface).name();
-        if (services.find(tag) != services.end()) {
-            ESP_LOGE(TAG, "Error: Service with interface '%s' already exists in ServiceFactory", tag.c_str());
-            return nullptr;
-        }
-
-        auto concreteInstance = std::make_shared<Concrete>(std::forward<Args>(args)...);
-        services[tag] = std::static_pointer_cast<void>(concreteInstance);
-        return concreteInstance;
-    }
-
-    // Get service without custom tag
-    template <typename TYPE>
-    std::shared_ptr<TYPE> getService() const {
-        const std::string tag = typeid(TYPE).name();
-        auto it = services.find(tag);
-
-        if (it == services.end()) {
-            ESP_LOGE(TAG, "Error: Service of type '%s' not found", tag.c_str());
-            return nullptr;
-        }
-
-        return std::static_pointer_cast<TYPE>(it->second);
+        return addService<Concrete>(tag.c_str(), std::forward<Args>(args)...);
     }
 #endif
+
 
     // Get service using custom tag
     template <typename TYPE>
@@ -100,6 +83,16 @@ public:
 
         return std::static_pointer_cast<TYPE>(it->second);
     }
+
+#ifdef CONFIG_COMPILER_CXX_RTTI
+    // Get service without custom tag
+    template <typename TYPE>
+    std::shared_ptr<TYPE> getService() const {
+        const std::string tag = typeid(TYPE).name();
+        return getService<TYPE>(tag.c_str());
+    }
+#endif
+
 };
 
 
