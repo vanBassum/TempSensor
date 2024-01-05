@@ -7,6 +7,40 @@
 
 class ST47796SAdapter : public ESP_LVGL::Display
 {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	const char* TAG = "ST7796SAdapter";
     std::shared_ptr<ST7796S> driver;
 	size_t bufferSize = 0;
