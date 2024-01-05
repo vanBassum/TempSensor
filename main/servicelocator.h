@@ -66,7 +66,7 @@ public:
     template <typename Interface, typename Concrete, typename... Args>
     Configurator<Concrete> addService(Args&&... args) {
         const std::string tag = typeid(Interface).name();
-        return addService<Concrete>(tag.c_str(), std::forward<Args>(args)...);
+        return addService<Interface, Concrete>(tag.c_str(), std::forward<Args>(args)...);
     }
 #endif
 

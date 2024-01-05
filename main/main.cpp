@@ -29,15 +29,20 @@ extern "C" void app_main(void)
     builder.Services.addService<SPIBus>().Config(ConfigSPIBus);
     builder.Services.addService<SPIDevice>(builder.Services.getService<SPIBus>()).Config(ConfigSPIDevice);
     builder.Services.addService<ST7796S>(builder.Services.getService<SPIDevice>()).Config(ConfigST7796S);
-    builder.Services.addService<LVGL::LVGLService>().Config(ConfigLVGL);
-    builder.Services.addService<ESP_LVGL::Display, ST47796SAdapter>(builder.Services.getService<LVGL::LVGLService>(), builder.Services.getService<ST7796S>()).Config(ConfigST47796SAdapter);
+    builder.Services.addService<ESP_LVGL::LVGLService>().Config(ConfigLVGL);
+    builder.Services.addService<ESP_LVGL::Display, ST47796SAdapter>(builder.Services.getService<ESP_LVGL::LVGLService>(), builder.Services.getService<ST7796S>()).Config(ConfigST47796SAdapter);
 
 
+    auto lvgl = builder.Services.getService<ESP_LVGL::LVGLService>();
     auto display = builder.Services.getService<ESP_LVGL::Display>();
 
     assert(display);
-    ESP_LVGL::Screen& screen = display->GetScreen();
+
+    ESP_LVGL::Screen screen(lvgl);
+    display->showScreen(screen);
+
     ESP_LVGL::Button button(screen);
+
     button.SetSize(200, 50);
 
 

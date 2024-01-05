@@ -66,7 +66,7 @@ void ConfigST7796S(std::shared_ptr<ST7796S> device)
 }
 
 
-void ConfigLVGL(std::shared_ptr<LVGL::LVGLService> service)
+void ConfigLVGL(std::shared_ptr<ESP_LVGL::LVGLService> service)
 {
     assert(service);
     service->setConfig({
