@@ -5,7 +5,7 @@
 
 void ConfigSPIBus(std::shared_ptr<SPIBus> bus)
 {
-    assert(bus && "SPIBus is nullptr");
+    assert(bus);
     bus->setConfig({
         .host = SPI2_HOST,
         .dmaChannel = 1,
@@ -25,7 +25,7 @@ void ConfigSPIBus(std::shared_ptr<SPIBus> bus)
 
 void ConfigSPIDevice(std::shared_ptr<SPIDevice> device)
 {
-    assert(device && "SPIDevice is nullptr");
+    assert(device);
 
     device->setConfig({
         .devConfig = {
@@ -52,7 +52,7 @@ void ConfigSPIDevice(std::shared_ptr<SPIDevice> device)
 
 void ConfigST7796S(std::shared_ptr<ST7796S> device)
 {
-    assert(device && "SPIDevice is nullptr");
+    assert(device);
     device->setConfig({
         .dc       = GPIO_NUM_21,
         .rst      = GPIO_NUM_22,
@@ -64,3 +64,30 @@ void ConfigST7796S(std::shared_ptr<ST7796S> device)
     device->init();
 
 }
+
+
+void ConfigLVGL(std::shared_ptr<LVGL::LVGLService> service)
+{
+    assert(service);
+    service->setConfig({
+        .timerIntervalms = 1,
+        .taskIntervalms = 20,
+    });
+    service->init();
+}
+
+void ConfigST47796SAdapter(std::shared_ptr<ST47796SAdapter> adapter)
+{
+    assert(adapter);
+    adapter->setConfig({
+        .width = 320,
+        .height = 480,
+        .bufferSize = 320 * 480 / 20,
+    });
+    adapter->init();
+}
+
+
+
+
+

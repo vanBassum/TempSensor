@@ -29,7 +29,8 @@ extern "C" void app_main(void)
     builder.Services.addService<SPIBus>().Config(ConfigSPIBus);
     builder.Services.addService<SPIDevice>(builder.Services.getService<SPIBus>()).Config(ConfigSPIDevice);
     builder.Services.addService<ST7796S>(builder.Services.getService<SPIDevice>()).Config(ConfigST7796S);
-    builder.Services.addService<ESP_LVGL::Display, ST47796SAdapter>(builder.Services.getService<ST7796S>());
+    builder.Services.addService<LVGL::LVGLService>().Config(ConfigLVGL);
+    builder.Services.addService<ESP_LVGL::Display, ST47796SAdapter>(builder.Services.getService<LVGL::LVGLService>(), builder.Services.getService<ST7796S>()).Config(ConfigST47796SAdapter);
 
 
     auto display = builder.Services.getService<ESP_LVGL::Display>();
